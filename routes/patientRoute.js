@@ -1,5 +1,9 @@
 import express from "express";
-import PatientExistance from "./../middlerware/PatientExistance.js";
+import slugify from "slugify";
+import {
+  getPatientSlugName,
+  PatientExistance,
+} from "./../middlerware/middlewares.js";
 import {
   getAllPatientController,
   getAllPatientInfoController,
@@ -16,7 +20,12 @@ router.get("/", getAllPatientController);
 router.post("/register", registerController);
 
 // adding information to the registered patient
-router.post("/patient-info/:name", PatientExistance, patientInfoController);
+router.post(
+  "/patient-info/:name",
+  PatientExistance,
+  getPatientSlugName,
+  patientInfoController
+);
 
 // get all patient info data
 router.get("/patient-info", getAllPatientInfoController);

@@ -1,39 +1,45 @@
 import query from "../config/db.js";
+import slugify from "slugify";
 
-export const getAllPatientController = async (req, res) => {
-  try {
-    const [data, dataCount] = await Promise.all([
-      query("SELECT * FROM patient"),
-      query("SELECT COUNT(*) AS userCount FROM patient"),
-    ]);
-    if (!data) {
-      res.status(404).send({
-        message: "Not Found: no User Registered",
-        success: false,
-      });
-    } else {
-      res.status(200).send({
-        message: "got all the user",
-        success: true,
-        data,
-        dataCount,
-      });
-    }
-  } catch (error) {
-    console.log("error: " + error);
-  }
-};
-
+// Controller function to register a new patient
 export const registerController = async (req, res) => {
   try {
-    const { name, dob, age, address, medical_report } = req.body;
+    const {
+      name,
+      date_of_birth,
+      age,
+      contact,
+      gender,
+      address,
+      next_appointment,
+      medical_history,
+    } = req.body;
+
+    // Generate slugified name
+    const slugName = slugify(name, {
+      replacement: "_",
+      lower: true,
+    });
+
+    // Insert patient details into the database
     const data = await query(
-      "INSERT INTO patient (name, dob, age,gender address, medical_report) VALUES (?, ?,?, ?, ?,?)",
-      [name, dob, age, gender, address, medical_report]
+      "INSERT INTO prms.patient_record (name, date_of_birth, age, contact, gender, address, next_appointment, medical_history) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        slugName,
+        date_of_birth,
+        age,
+        contact,
+        gender,
+        address,
+        next_appointment,
+        medical_history,
+      ]
     );
+
+    // Send success response
     res.status(200).send({
       success: true,
-      message: "New user created successfully",
+      message: "New Patient created successfully",
       data,
     });
   } catch (error) {
@@ -46,9 +52,47 @@ export const registerController = async (req, res) => {
   }
 };
 
+export const getAllPatientController = async (req, res) => {
+  try {
+    const [data, dataCount] = await Promise.all([
+      query("SELECT * FROM prms.patient_record"),
+      query("SELECT COUNT(*) AS userCount FROM prms.patient_record"),
+    ]);
+    if (!data) {
+      res.status(404).send({
+        message: "Not Found: No patient Registered",
+        success: false,
+      });
+    } else {
+      res.status(200).send({
+        message: "Got all the Patient records",
+        success: true,
+        data,
+        dataCount,
+      });
+    }
+  } catch (error) {
+    console.log("error: " + error);
+  }
+};
+
 export const patientInfoController = async (req, res) => {
   try {
     const { name } = req.params;
+
+    // Retrieve P_id based on the provided name
+    const [patient] = await query(
+      "SELECT P_id FROM prms.patient_record WHERE Name = ?",
+      [name]
+    );
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found",
+      });
+    }
+
+    const { P_id } = patient;
     const {
       date,
       doctor,
@@ -59,11 +103,12 @@ export const patientInfoController = async (req, res) => {
     } = req.body;
 
     const data = await query(
-      "INSERT INTO prms.patientInfo (name, date, doctor, record_category, record_type, record_file, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO prms.patient_information (P_id, Name, D_id, Date, Record_Category, Record_Type, Record_File, Description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [
+        P_id,
         name,
-        date,
         doctor,
+        date,
         record_category,
         record_type,
         record_file,
@@ -73,14 +118,14 @@ export const patientInfoController = async (req, res) => {
 
     res.status(200).send({
       success: true,
-      message: "New patient record created successfully",
+      message: "New patient information created successfully",
       data,
     });
   } catch (error) {
-    console.log("Error in patient info controller:", error);
+    console.log("Error in patient information controller:", error);
     res.status(500).send({
       success: false,
-      message: "Error in patient info controller",
+      message: "Error in patient information controller",
       error: error,
     });
   }
@@ -89,8 +134,8 @@ export const patientInfoController = async (req, res) => {
 export const getAllPatientInfoController = async (req, res) => {
   try {
     const [info, dataCount] = await Promise.all([
-      query("SELECT * FROM patientinfo"),
-      query("SELECT COUNT(*) AS userCount FROM patientinfo"),
+      query("SELECT * FROM prms.patient_information"),
+      query("SELECT COUNT(*) AS userCount FROM prms.patient_information"),
     ]);
     if (!info) {
       res.status(404).send({
