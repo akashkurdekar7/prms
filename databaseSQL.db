@@ -1,0 +1,45 @@
+CREATE TABLE patient (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) UNIQUE,
+  dob DATE,
+  age INT,
+  gender ENUM('Male', 'Female', 'Other'),
+  address VARCHAR(255),
+  medical_report TEXT,
+  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT CHK_Age CHECK (age >= 0)
+);
+
+
+CREATE TABLE prms.patientInfo (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255),
+  date DATE,
+  doctor VARCHAR(255),
+  record_category VARCHAR(255),
+  record_type VARCHAR(255),
+  record_file VARCHAR(255),
+  description TEXT
+);
+
+
+USE prms;
+INSERT INTO patient (name, dob, age, gender, address, medical_report)
+VALUES 
+  ('John Doe', '1990-05-15', 31, 'Male', '123 Main St, Anytown, USA', 'No major issues'),
+  ('Jane Smith', '1985-09-20', 36, 'Female', '456 Elm St, Othertown, USA', 'Allergic to peanuts'),
+  ('Alex Johnson', '1995-02-10', 26, 'Other', '789 Oak St, Anycity, USA', 'Diabetic'),
+  ('Emily Brown', '2000-11-30', 21, 'Female', '321 Maple St, Anothercity, USA', 'No known conditions');
+
+
+INSERT INTO prms.patientInfo (name, date, doctor, record_category, record_type, record_file, description)
+SELECT 
+    p.name,
+    '2024-04-01' AS date, -- Example date
+    'Dr. Smith' AS doctor, -- Example doctor
+    'Category A' AS record_category, -- Example record category
+    'Type X' AS record_type, -- Example record type
+    'file.pdf' AS record_file, -- Example record file
+    'Description of the record' AS description -- Example description
+FROM prms.patient p
+WHERE p.id = 123
