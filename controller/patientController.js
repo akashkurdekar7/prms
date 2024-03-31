@@ -154,3 +154,33 @@ export const getAllPatientInfoController = async (req, res) => {
     console.log("error: " + error);
   }
 };
+
+export const getSinglePatientInfoController = async (req, res) => {
+  try {
+    const { name } = req.params;
+    const info = await query(
+      "SELECT * FROM prms.patient_information WHERE Name = ?",
+      [name]
+    );
+
+    if (!info || info.length === 0) {
+      res.status(404).send({
+        message: "Not Found: No Patient Info Found for the specified name",
+        success: false,
+      });
+    } else {
+      res.status(200).send({
+        message: "Got the Patient Information",
+        success: true,
+        info,
+      });
+    }
+  } catch (error) {
+    console.log("Error in getting patient information:", error);
+    res.status(500).send({
+      success: false,
+      message: "Error in getting patient information",
+      error: error.message,
+    });
+  }
+};

@@ -26,7 +26,7 @@ const HeroSection = () => {
   const getAllPatient = async () => {
     try {
       const { new_patient } = await axios.get(
-        `http://localhost:4000/api/v1/patient`
+        `http://localhost:8000/api/patient`
       );
       console.log("patient-data:", new_patient.data);
 
@@ -44,7 +44,7 @@ const HeroSection = () => {
   const getAllPatientInfo = async () => {
     try {
       const { data } = await axios.get(
-        `http://localhost:4000/api/v1/patient/patient-info`
+        `http://localhost:8000/api/patient/patient-info`
       );
       // console.log("information data:", patient_info.data);
       if (data?.success) {
@@ -239,8 +239,7 @@ const Wrapper = styled.div`
   input {
     border: none !important;
     text-transform: lowercase !important;
-  }import { patientInfoController } from './../../../controller/patientController';
-
+  }
 `;
 
 export default HeroSection;

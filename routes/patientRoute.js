@@ -7,6 +7,7 @@ import {
 import {
   getAllPatientController,
   getAllPatientInfoController,
+  getSinglePatientInfoController,
   patientInfoController,
   registerController,
 } from "./../controller/patientController.js";
@@ -29,5 +30,13 @@ router.post(
 
 // get all patient info data
 router.get("/patient-info", getAllPatientInfoController);
+
+// get single patient info data
+router.get(
+  "/patient-info/:name",
+  PatientExistance,
+  getPatientSlugName,
+  getSinglePatientInfoController
+);
 
 export default router;
