@@ -20,12 +20,9 @@ router.get("/", getAllPatientController);
 // register for new patient
 router.post("/register", registerController);
 
-// to check if a patient already exists
-// router.get("/check", checkPatientController);
-
 // adding information to the registered patient
 router.post(
-  "/patient-info/:name",
+  "/:name",
   PatientExistance,
   getPatientSlugName,
   patientInfoController
@@ -36,7 +33,7 @@ router.get("/patient-info", getAllPatientInfoController);
 
 // get single patient info data
 router.get(
-  "/patient-info/:name",
+  "/:name",
   PatientExistance,
   getPatientSlugName,
   getSinglePatientInfoController

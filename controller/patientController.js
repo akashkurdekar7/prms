@@ -42,7 +42,7 @@ export const registerController = async (req, res) => {
       [name]
     );
 
-    if (existingPatient.length > 0) {
+    if (existingPatient) {
       return res.status(400).send({
         success: false,
         message: "Patient already exists",
@@ -78,22 +78,15 @@ export const registerController = async (req, res) => {
       });
     }
   } catch (error) {
-    if (error.code === "ER_DUP_ENTRY") {
-      return res.status(400).send({
-        success: false,
-        message: "Patient with the same name already exists",
-        error: error.message,
-      });
-    } else {
-      console.log("error: " + error);
-      res.status(500).send({
-        success: false,
-        message: "Error in register patient controller ",
-        error: error.message,
-      });
-    }
+    console.log("error: " + error);
+    res.status(500).send({
+      success: false,
+      message: "Error in register patient controller ",
+      error: error.message,
+    });
   }
 };
+// to get all new patient
 export const getAllPatientController = async (req, res) => {
   try {
     const [data, dataCount] = await Promise.all([
@@ -117,7 +110,7 @@ export const getAllPatientController = async (req, res) => {
     console.log("error: " + error);
   }
 };
-
+// to register a new patient information
 export const patientInfoController = async (req, res) => {
   try {
     const { name } = req.params;
@@ -172,7 +165,7 @@ export const patientInfoController = async (req, res) => {
     });
   }
 };
-
+// to get a all patient information
 export const getAllPatientInfoController = async (req, res) => {
   try {
     const [info, dataCount] = await Promise.all([
@@ -196,7 +189,7 @@ export const getAllPatientInfoController = async (req, res) => {
     console.log("error: " + error);
   }
 };
-
+// to get a single patient
 export const getSinglePatientInfoController = async (req, res) => {
   try {
     const { name } = req.params;

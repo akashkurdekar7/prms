@@ -3,6 +3,7 @@ import Home from "./Pages/Home";
 import Error from "./Pages/Error";
 import { GlobalStyle } from "./GlobalStyle";
 import { ThemeProvider } from "styled-components";
+import Practise from "./Practise.js";
 
 const App = () => {
   const theme = {
@@ -68,6 +69,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="*" element={<Error />} />
+        <Route path="/ass" element={<Practise />} />
       </Routes>
     </ThemeProvider>
   );

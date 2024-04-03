@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -7,7 +7,6 @@ import Button from "../Styles/Button";
 const Navbar = () => {
   const [isRegOpen, setIsRegOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [regData, setRegData] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     date_of_birth: "",
@@ -18,23 +17,27 @@ const Navbar = () => {
     next_appointment: "",
     medical_history: "",
   });
-  const [patientNames, setPatientNames] = useState([]);
-  const getAllPatient = async () => {
-    try {
-      const { data } = await axios.get(`http://localhost:8000/api/patient`);
 
-      console.log("patient-data:", data);
+  const [patientNames, setPatientNames] = useState();
 
-      if (data?.success) {
-        setRegData(data?.data);
-        toast.success("Registration Data Received Successfully");
+  useEffect(() => {
+    const getAllPatient = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8000/api/patient`);
+        const { data } = res;
+
+        if (data?.success) {
+          const names = data.data.map((patient) => patient.name);
+          setPatientNames(names);
+        }
+      } catch (error) {
+        console.error("Error fetching patient names:", error);
+        toast.error("Error fetching patient names");
       }
-      // console.log("Set Data: ", patient_data);
-    } catch (error) {
-      console.log("Error fetching Registration Data:", error);
-      toast.error("Something went wrong in getting registration data");
-    }
-  };
+    };
+    getAllPatient();
+  }, []);
+
   const openRegModal = () => {
     setIsRegOpen(true);
     setIsInfoOpen(false);
@@ -142,16 +145,12 @@ const Navbar = () => {
           res.status === 400 &&
           res.data.message === "Patient already exists"
         ) {
-          console.log("entere her");
           toast.error("Patient already exists");
         } else {
           toast.error(res?.data?.message || "Failed to register patient");
         }
       }
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to register patient"
-      );
       console.log("Error:", error);
       console.log("Response data:", error.response?.data);
     }
@@ -160,7 +159,62 @@ const Navbar = () => {
   const handleInfoSubmit = async (e) => {
     e.preventDefault();
     try {
-    } catch (error) {}
+      const {
+        patient_name,
+        date,
+        doctor,
+        record_category,
+        record_type,
+        record_file,
+        description,
+      } = formData;
+
+      if (
+        !patient_name ||
+        !date ||
+        !doctor ||
+        !record_category ||
+        !record_type ||
+        !record_file ||
+        !description
+      ) {
+        toast.error("Please fill in all fields");
+        return;
+      }
+
+      const res = await axios.post(
+        `http://localhost:8000/api/patient/${patient_name}`,
+        {
+          patient_name,
+          date,
+          doctor,
+          record_category,
+          record_type,
+          record_file,
+          description,
+        }
+      );
+      console.log("info Data :", res);
+      if (res && res.data.success === true) {
+        toast.success("Patient Information Added Successfully");
+        setFormData({
+          ...formData,
+          date: "",
+          doctor: "",
+          record_category: "",
+          record_type: "",
+          record_file: "",
+          description: "",
+        });
+      } else {
+        toast.error(res?.data?.message || "Failed to add patient information");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to add patient information"
+      );
+    }
   };
 
   const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
@@ -300,10 +354,26 @@ const Navbar = () => {
                   onSubmit={handleInfoSubmit}
                   className="information-form"
                 >
-                  <FormGroup>
-                    <label htmlFor="name">Patient Name:</label>
-                    <input type="text" id="name" name="name" required />
-                  </FormGroup>
+                  {patientNames !== null && (
+                    <FormGroup>
+                      <label htmlFor="patient_name">Patient Name:</label>
+                      <select
+                        id="patient_name"
+                        name="patient_name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                      >
+                        <option value="" disabled>
+                          Select patient name
+                        </option>
+                        {patientNames.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                    </FormGroup>
+                  )}
                   <FormGroup>
                     <label htmlFor="date">Date:</label>
                     <input type="date" id="date" name="date" required />

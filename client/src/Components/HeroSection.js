@@ -26,7 +26,6 @@ const HeroSection = () => {
   const getAllPatient = async () => {
     try {
       const { data } = await axios.get(`http://localhost:8000/api/patient`);
-
       console.log("patient-data:", data);
 
       if (data?.success) {
@@ -70,7 +69,7 @@ const HeroSection = () => {
       const selectedPatient = JSON.parse(selectedValue);
       setSelectedPatient(selectedPatient);
       // Check if infoData is populated
-      if (infoData.length > 0) {
+      if (infoData) {
         const patientInfo = infoData.find(
           (info) => info.patient_id === selectedPatient.id
         );
@@ -102,7 +101,9 @@ const HeroSection = () => {
           <h3>Select a patient</h3>
           {regData && (
             <select onChange={handleSelectPatient}>
-              <option disabled>Select a patient</option>
+              <option disabled defaultValue>
+                Select a patient
+              </option>
               <option value="all">Show All Patients</option>
               {regData.map((patient) => (
                 <option key={patient.id} value={JSON.stringify(patient)}>
@@ -152,9 +153,7 @@ const HeroSection = () => {
                     </td>
                     <td>{selectedPatient.id}</td>
                     <td>{selectedPatient.name}</td>
-                    {selectedPatientInfo && (
-                      <td>{selectedPatientInfo.description}</td>
-                    )}
+                    <td>{selectedPatientInfo?.description}</td>
                   </tr>
                 )}
           </tbody>
