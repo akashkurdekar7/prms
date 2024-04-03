@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 import axios from "axios";
 
 const HeroSection = () => {
-  const [data, setData] = useState([]);
+  const [regData, setRegData] = useState([]);
   const [infoData, setInfoData] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [selectedPatientInfo, setSelectedPatientInfo] = useState(null);
@@ -25,13 +25,12 @@ const HeroSection = () => {
 
   const getAllPatient = async () => {
     try {
-      const { new_patient } = await axios.get(
-        `http://localhost:8000/api/patient`
-      );
-      console.log("patient-data:", new_patient.data);
+      const { data } = await axios.get(`http://localhost:8000/api/patient`);
 
-      if (new_patient.data?.success) {
-        setData(new_patient.data?.data);
+      console.log("patient-data:", data);
+
+      if (data?.success) {
+        setRegData(data?.data);
         toast.success("Registration Data Received Successfully");
       }
       // console.log("Set Data: ", patient_data);
@@ -46,7 +45,7 @@ const HeroSection = () => {
       const { data } = await axios.get(
         `http://localhost:8000/api/patient/patient-info`
       );
-      // console.log("information data:", patient_info.data);
+      console.log("information data:", data);
       if (data?.success) {
         setInfoData(data?.data);
         toast.success("Patient Information Received Successfully");
@@ -59,8 +58,6 @@ const HeroSection = () => {
 
   useEffect(() => {
     getAllPatient();
-  }, []);
-  useEffect(() => {
     getAllPatientInfo();
   }, []);
 
@@ -68,13 +65,19 @@ const HeroSection = () => {
     const selectedValue = event.target.value;
     if (selectedValue === "all") {
       setSelectedPatient(null);
+      setSelectedPatientInfo(null);
     } else {
       const selectedPatient = JSON.parse(selectedValue);
       setSelectedPatient(selectedPatient);
-      const patientInfo = infoData.find(
-        (info) => info.patient_id === selectedPatient.id
-      );
-      setSelectedPatientInfo(patientInfo);
+      // Check if infoData is populated
+      if (infoData.length > 0) {
+        const patientInfo = infoData.find(
+          (info) => info.patient_id === selectedPatient.id
+        );
+        setSelectedPatientInfo(patientInfo);
+      } else {
+        console.log("Patient Information not available yet.");
+      }
     }
   };
 
@@ -97,13 +100,13 @@ const HeroSection = () => {
         )}
         <div className="select">
           <h3>Select a patient</h3>
-          {data && (
+          {regData && (
             <select onChange={handleSelectPatient}>
               <option disabled>Select a patient</option>
               <option value="all">Show All Patients</option>
-              {data.map((p) => (
-                <option key={p.id} value={JSON.stringify(p)}>
-                  {p.name}
+              {regData.map((patient) => (
+                <option key={patient.id} value={JSON.stringify(patient)}>
+                  {patient.name}
                 </option>
               ))}
             </select>
@@ -130,7 +133,7 @@ const HeroSection = () => {
 
           <tbody>
             {selectedPatient === null
-              ? data.map((patient) => (
+              ? regData.map((patient) => (
                   <tr key={patient.id}>
                     <td>
                       <input type="checkbox" />

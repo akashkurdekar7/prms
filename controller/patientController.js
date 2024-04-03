@@ -1,5 +1,6 @@
 import query from "../config/db.js";
 import slugify from "slugify";
+import { calculateAge } from "./../Helper/helperFuntions.js";
 
 // Controller function to register a new patient
 export const registerController = async (req, res) => {
@@ -7,7 +8,6 @@ export const registerController = async (req, res) => {
     const {
       name,
       date_of_birth,
-      age,
       contact,
       gender,
       address,
@@ -15,43 +15,85 @@ export const registerController = async (req, res) => {
       medical_history,
     } = req.body;
 
-    // Generate slugified name
-    const slugName = slugify(name, {
-      replacement: "_",
-      lower: true,
-    });
+    const age = calculateAge(date_of_birth);
 
-    // Insert patient details into the database
-    const data = await query(
-      "INSERT INTO prms.patient_record (name, date_of_birth, age, contact, gender, address, next_appointment, medical_history) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        slugName,
-        date_of_birth,
-        age,
-        contact,
-        gender,
-        address,
-        next_appointment,
-        medical_history,
-      ]
+    if (
+      !name ||
+      !date_of_birth ||
+      !contact ||
+      !gender ||
+      !address ||
+      !next_appointment ||
+      !medical_history
+    ) {
+      return res.status(400).send({
+        message: "Please fill in all fields",
+      });
+    }
+    if (age < 10) {
+      return res.status(400).send({
+        message: "Patient must be at least 10 years old to register",
+      });
+    }
+
+    // Check if the patient already exists
+    const existingPatient = await query(
+      "SELECT * FROM prms.patient_record WHERE name = ?",
+      [name]
     );
 
-    // Send success response
-    res.status(200).send({
-      success: true,
-      message: "New Patient created successfully",
-      data,
-    });
+    if (existingPatient.length > 0) {
+      return res.status(400).send({
+        success: false,
+        message: "Patient already exists",
+        name,
+      });
+    } else {
+      // Generate slugified name
+      const slugName = slugify(name, {
+        replacement: "_",
+        lower: true,
+      });
+
+      // Insert patient details into the database
+      const data = await query(
+        "INSERT INTO prms.patient_record (name, date_of_birth, age, contact, gender, address, next_appointment, medical_history) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+          slugName,
+          date_of_birth,
+          age,
+          contact,
+          gender,
+          address,
+          next_appointment,
+          medical_history,
+        ]
+      );
+
+      // Send success response
+      res.status(201).send({
+        success: true,
+        message: "New Patient created successfully",
+        data,
+      });
+    }
   } catch (error) {
-    console.log("error: " + error);
-    res.status(500).send({
-      success: false,
-      message: "Error in register patient controller",
-      error: error,
-    });
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(400).send({
+        success: false,
+        message: "Patient with the same name already exists",
+        error: error.message,
+      });
+    } else {
+      console.log("error: " + error);
+      res.status(500).send({
+        success: false,
+        message: "Error in register patient controller ",
+        error: error.message,
+      });
+    }
   }
 };
-
 export const getAllPatientController = async (req, res) => {
   try {
     const [data, dataCount] = await Promise.all([

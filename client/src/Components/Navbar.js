@@ -7,15 +7,34 @@ import Button from "../Styles/Button";
 const Navbar = () => {
   const [isRegOpen, setIsRegOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [regData, setRegData] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
-    dob: "",
+    date_of_birth: "",
     age: "",
     gender: "",
+    contact: "",
     address: "",
-    medical_report: "",
+    next_appointment: "",
+    medical_history: "",
   });
+  const [patientNames, setPatientNames] = useState([]);
+  const getAllPatient = async () => {
+    try {
+      const { data } = await axios.get(`http://localhost:8000/api/patient`);
 
+      console.log("patient-data:", data);
+
+      if (data?.success) {
+        setRegData(data?.data);
+        toast.success("Registration Data Received Successfully");
+      }
+      // console.log("Set Data: ", patient_data);
+    } catch (error) {
+      console.log("Error fetching Registration Data:", error);
+      toast.error("Something went wrong in getting registration data");
+    }
+  };
   const openRegModal = () => {
     setIsRegOpen(true);
     setIsInfoOpen(false);
@@ -36,67 +55,115 @@ const Navbar = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name === "date_of_birth") {
+      // Calculate age based on date of birth
+      const dob = new Date(value);
+      const today = new Date();
+      const ageDiff = today.getFullYear() - dob.getFullYear();
+      const isBirthdayPassed =
+        today.getMonth() < dob.getMonth() ||
+        (today.getMonth() === dob.getMonth() &&
+          today.getDate() < dob.getDate());
+      const age = isBirthdayPassed ? ageDiff : ageDiff - 1;
+
+      setFormData({
+        ...formData,
+        [name]: value,
+        age: age.toString(), // Convert age to string for input field compatibility
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { name, dob, age, gender, address, medical_report } = formData;
-      switch (true) {
-        case !name:
-          toast.error("Please enter the Name of the Patient");
-          return;
-        case !dob:
-          toast.error("Please enter the Date of birth of the Patient");
-          return;
-        case !age:
-          toast.error("Please enter Age of the Patient");
-          return;
-        case !gender:
-          toast.error("Please enter Gender of the Patient");
-          return;
-        case !address:
-          toast.error("Please enter Address of the Patient");
-          return;
-        case !medical_report:
-          toast.error("Please enter Medical Reports of the Patient");
-          return;
-        default:
-          break;
+      const {
+        name,
+        date_of_birth,
+        age,
+        contact,
+        gender,
+        address,
+        next_appointment,
+        medical_history,
+      } = formData;
+
+      if (
+        !name ||
+        !date_of_birth ||
+        !age ||
+        !contact ||
+        !gender ||
+        !address ||
+        !next_appointment ||
+        !medical_history
+      ) {
+        toast.error("Please fill in all fields");
+        return;
+      }
+      if (parseInt(age) < 10) {
+        toast.error("Patient must be at least 10 years old to register");
+        return;
       }
       const res = await axios.post(
-        `${process.env.BASE_URL}/api/patient/register`,
+        `http://localhost:8000/api/patient/register`,
         {
           name,
-          dob,
+          date_of_birth,
           age,
+          contact,
           gender,
           address,
-          medical_report,
+          next_appointment,
+          medical_history,
         }
       );
-      console.log("Data :", res);
+      // console.log("Data :", res);
       if (res && res?.data?.success === true) {
-        toast.success("patient saved successfully");
+        toast.success("Patient saved successfully");
         setFormData({
           name: "",
-          dob: "",
+          date_of_birth: "",
           age: "",
           gender: "",
+          contact: "",
           address: "",
-          medical_report: "",
+          next_appointment: "",
+          medical_history: "",
         });
       } else {
-        toast.error(res?.data?.message || "Failed to register patient");
+        if (
+          res &&
+          res.status === 400 &&
+          res.data.message === "Patient already exists"
+        ) {
+          console.log("entere her");
+          toast.error("Patient already exists");
+        } else {
+          toast.error(res?.data?.message || "Failed to register patient");
+        }
       }
     } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to register patient"
+      );
       console.log("Error:", error);
       console.log("Response data:", error.response?.data);
     }
   };
 
-  const handleInfoSubmit = () => {};
+  const handleInfoSubmit = async (e) => {
+    e.preventDefault();
+    try {
+    } catch (error) {}
+  };
+
+  const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
 
   return (
     <Wrapper>
@@ -124,17 +191,18 @@ const Navbar = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      placeholder="name of the patient..."
+                      placeholder="Name of the patient..."
                     />
                   </FormGroup>
                   <FormGroup>
-                    <label htmlFor="dob">Date of Birth:</label>
+                    <label htmlFor="date_of_birth">Date of Birth:</label>
                     <input
                       type="date"
-                      id="dob"
-                      name="dob"
-                      value={formData.dob}
+                      id="date_of_birth"
+                      name="date_of_birth"
+                      value={formData.date_of_birth}
                       onChange={handleInputChange}
+                      max={today}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -143,23 +211,40 @@ const Navbar = () => {
                       type="number"
                       id="age"
                       name="age"
-                      inputMode="number"
                       value={formData.age}
+                      readOnly
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <label htmlFor="contact">Contact:</label>
+                    <input
+                      type="tel"
+                      id="contact"
+                      name="contact"
+                      value={formData.contact}
                       onChange={handleInputChange}
-                      placeholder="Age of the patient..."
+                      maxLength={10}
+                      placeholder="Phone Number"
+                      title="Please enter a 10-digit phone number"
                     />
                   </FormGroup>
                   <FormGroup>
                     <label htmlFor="gender">Gender:</label>
-                    <input
-                      type="text"
+                    <select
                       id="gender"
                       name="gender"
                       value={formData.gender}
                       onChange={handleInputChange}
-                      placeholder="gender"
-                    />
+                    >
+                      <option value="" disabled>
+                        Select gender
+                      </option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="others">Others</option>
+                    </select>
                   </FormGroup>
+
                   <FormGroup>
                     <label htmlFor="address">Address:</label>
                     <input
@@ -172,13 +257,24 @@ const Navbar = () => {
                     />
                   </FormGroup>
                   <FormGroup>
-                    <label htmlFor="medical_report">Medical Report:</label>
-                    <textarea
-                      id="medical_report"
-                      name="medical_report"
-                      value={formData.medical_report}
+                    <label htmlFor="next_appointment">Next Appointment:</label>
+                    <input
+                      type="date"
+                      id="next_appointment"
+                      name="next_appointment"
+                      value={formData.next_appointment}
                       onChange={handleInputChange}
-                      placeholder="Medical Reports of the patient if any..."
+                      min={today}
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <label htmlFor="medical_history">Medical History:</label>
+                    <textarea
+                      id="medical_history"
+                      name="medical_history"
+                      value={formData.medical_history}
+                      onChange={handleInputChange}
+                      placeholder="Medical History of the patient if any..."
                     ></textarea>
                   </FormGroup>
                   <div className="button-wrapper">
@@ -319,6 +415,18 @@ const FormGroup = styled.div`
   }
   textarea {
     height: 100px;
+  }
+  select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    appearance: none; /* Remove default arrow icon */
+    background-color: #fff; /* Add background color */
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23444" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="20px" height="20px"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.885 6.115a.5.5 0 01.707.707l-7.071 7.071a.5.5 0 01-.707 0l-7.071-7.071a.5.5 0 01.707-.707L10 12.293l5.178-5.178z"/></svg>'); /* Add custom arrow icon */
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
   }
 `;
 
