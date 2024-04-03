@@ -31,12 +31,12 @@ export const getPatientSlugName = async (req, res, next) => {
   try {
     const { name } = req.params;
     const [patient] = await query(
-      "SELECT name FROM prms.patient_record WHERE name = ?",
+      "SELECT slugName FROM prms.patient_record WHERE name = ?",
       [name]
     );
 
     if (patient) {
-      req.patientSlugName = patient.name;
+      req.patientSlugName = patient.slugName;
       next();
     } else {
       return res.status(404).json({

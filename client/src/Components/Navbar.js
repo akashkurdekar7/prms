@@ -17,18 +17,24 @@ const Navbar = () => {
     next_appointment: "",
     medical_history: "",
   });
+  const [infoFormData, setInfoFormData] = useState({
+    date: "",
+    doctor: "",
+    record_category: "",
+    record_file: "",
+    record_type: "",
+    description: "",
+  });
 
   const [patientNames, setPatientNames] = useState();
 
   useEffect(() => {
     const getAllPatient = async () => {
       try {
-        const res = await axios.get(`http://localhost:8000/api/patient`);
-        const { data } = res;
+        const { data } = await axios.get(`http://localhost:8000/api/patient`);
 
         if (data?.success) {
-          const names = data.data.map((patient) => patient.name);
-          setPatientNames(names);
+          setPatientNames(data?.data);
         }
       } catch (error) {
         console.error("Error fetching patient names:", error);
@@ -80,6 +86,13 @@ const Navbar = () => {
         [name]: value,
       });
     }
+  };
+  const handleInputChangeInfo = (e) => {
+    const { name, value } = e.target;
+    setInfoFormData({
+      ...infoFormData,
+      [name]: value,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -160,18 +173,17 @@ const Navbar = () => {
     e.preventDefault();
     try {
       const {
-        patient_name,
         date,
         doctor,
         record_category,
         record_type,
         record_file,
         description,
-      } = formData;
+      } = infoFormData;
 
+      const patient_name = formData.name;
+      console.log(patient_name);
       if (
-        !patient_name ||
-        !date ||
         !doctor ||
         !record_category ||
         !record_type ||
@@ -197,8 +209,9 @@ const Navbar = () => {
       console.log("info Data :", res);
       if (res && res.data.success === true) {
         toast.success("Patient Information Added Successfully");
-        setFormData({
-          ...formData,
+        setInfoFormData({
+          // Clear the infoFormData after successful submission
+          ...infoFormData,
           date: "",
           doctor: "",
           record_category: "",
@@ -348,39 +361,54 @@ const Navbar = () => {
             <>
               <BGC />
               <Modal>
-                <h2>Add Patient Info</h2>
+                <h3>Add Patient Info</h3>
                 <form
                   method="post"
                   onSubmit={handleInfoSubmit}
                   className="information-form"
                 >
-                  {patientNames !== null && (
-                    <FormGroup>
-                      <label htmlFor="patient_name">Patient Name:</label>
-                      <select
-                        id="patient_name"
-                        name="patient_name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                      >
-                        <option value="" disabled>
-                          Select patient name
-                        </option>
-                        {patientNames.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
+                  <FormGroup>
+                    <label htmlFor="patient_name">Patient Name:</label>
+                    <select
+                      value={infoFormData.name}
+                      onChange={handleInputChangeInfo}
+                    >
+                      <option value="" disabled selected>
+                        Select patient Name
+                      </option>
+                      {patientNames &&
+                        patientNames.map((patient) => (
+                          <option
+                            key={patient.P_id}
+                            value={JSON.stringify(patient)}
+                          >
+                            {patient.Name}
                           </option>
                         ))}
-                      </select>
-                    </FormGroup>
-                  )}
+                    </select>
+                  </FormGroup>
+
                   <FormGroup>
                     <label htmlFor="date">Date:</label>
-                    <input type="date" id="date" name="date" required />
+                    <input
+                      type="date"
+                      id="date"
+                      name="date"
+                      value={infoFormData.date}
+                      onChange={handleInputChangeInfo}
+                      min={today}
+                    />
                   </FormGroup>
+
                   <FormGroup>
                     <label htmlFor="doctor">Doctor:</label>
-                    <input type="text" id="doctor" name="doctor" required />
+                    <input
+                      type="text"
+                      id="doctor"
+                      value={infoFormData.doctor}
+                      onChange={handleInputChangeInfo}
+                      name="doctor"
+                    />
                   </FormGroup>
                   <FormGroup>
                     <label htmlFor="record_category">Record Category:</label>
@@ -388,7 +416,8 @@ const Navbar = () => {
                       type="text"
                       id="record_category"
                       name="record_category"
-                      required
+                      value={infoFormData.record_category}
+                      onChange={handleInputChangeInfo}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -397,7 +426,8 @@ const Navbar = () => {
                       type="text"
                       id="record_type"
                       name="record_type"
-                      required
+                      value={infoFormData.record_type}
+                      onChange={handleInputChangeInfo}
                     />
                   </FormGroup>
                   <FormGroup>
@@ -406,12 +436,18 @@ const Navbar = () => {
                       type="text"
                       id="record_file"
                       name="record_file"
-                      required
+                      value={infoFormData.record_file}
+                      onChange={handleInputChangeInfo}
                     />
                   </FormGroup>
                   <FormGroup>
                     <label htmlFor="description">Description:</label>
-                    <textarea id="description" name="description"></textarea>
+                    <textarea
+                      id="description"
+                      name="description"
+                      value={infoFormData.description}
+                      onChange={handleInputChangeInfo}
+                    ></textarea>
                   </FormGroup>
                   <div className="button-wrapper">
                     <Button onClick={closeInfoModal}>Close Modal</Button>

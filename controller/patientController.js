@@ -42,7 +42,7 @@ export const registerController = async (req, res) => {
       [name]
     );
 
-    if (existingPatient) {
+    if (existingPatient.length > 0) {
       return res.status(400).send({
         success: false,
         message: "Patient already exists",
@@ -57,8 +57,9 @@ export const registerController = async (req, res) => {
 
       // Insert patient details into the database
       const data = await query(
-        "INSERT INTO prms.patient_record (name, date_of_birth, age, contact, gender, address, next_appointment, medical_history) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO prms.patient_record (name,slugName, date_of_birth, age, contact, gender, address, next_appointment, medical_history) VALUES (?, ?,?, ?, ?, ?, ?, ?, ?)",
         [
+          name,
           slugName,
           date_of_birth,
           age,
@@ -114,31 +115,41 @@ export const getAllPatientController = async (req, res) => {
 export const patientInfoController = async (req, res) => {
   try {
     const { name } = req.params;
-
-    // Retrieve P_id based on the provided name
-    const [patient] = await query(
-      "SELECT P_id FROM prms.patient_record WHERE Name = ?",
-      [name]
-    );
-    if (!patient) {
-      return res.status(404).json({
-        success: false,
-        message: "Patient not found",
-      });
-    }
-
-    const { P_id } = patient;
     const {
-      date,
       doctor,
+      date,
       record_category,
       record_type,
       record_file,
       description,
     } = req.body;
+    // Retrieve P_id based on the provided name
+    const [patient] = await query(
+      "SELECT P_id FROM prms.patient_record WHERE name = ?",
+      [name]
+    );
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: `Patient ${name} not found`,
+      });
+    }
 
+    const { P_id } = patient;
+    // Check if the patient already exists
+    const existingPatientInfo = await query(
+      "SELECT * FROM prms.patient_information WHERE name = ?",
+      [name]
+    );
+    if (existingPatientInfo.length > 0) {
+      return res.status(400).send({
+        success: false,
+        message: "Patient info already exists",
+        name,
+      });
+    }
     const data = await query(
-      "INSERT INTO prms.patient_information (P_id, Name, D_id, Date, Record_Category, Record_Type, Record_File, Description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO prms.patient_information (P_id, Name,Doctor, Date, Record_Category, Record_Type, Record_File, Description) VALUES (?, ?, ?, ?, ?, ?, ?,?)",
       [
         P_id,
         name,

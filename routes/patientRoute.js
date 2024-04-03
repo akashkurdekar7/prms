@@ -1,5 +1,4 @@
 import express from "express";
-import slugify from "slugify";
 import {
   getPatientSlugName,
   PatientExistance,
@@ -21,22 +20,12 @@ router.get("/", getAllPatientController);
 router.post("/register", registerController);
 
 // adding information to the registered patient
-router.post(
-  "/:name",
-  PatientExistance,
-  getPatientSlugName,
-  patientInfoController
-);
+router.post("/:slugName", PatientExistance, patientInfoController);
 
 // get all patient info data
 router.get("/patient-info", getAllPatientInfoController);
 
 // get single patient info data
-router.get(
-  "/:name",
-  PatientExistance,
-  getPatientSlugName,
-  getSinglePatientInfoController
-);
+router.get("/:name", PatientExistance, getSinglePatientInfoController);
 
 export default router;

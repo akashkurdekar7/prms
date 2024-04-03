@@ -62,6 +62,7 @@ const HeroSection = () => {
 
   const handleSelectPatient = (event) => {
     const selectedValue = event.target.value;
+    console.log("selectedValue", selectedValue);
     if (selectedValue === "all") {
       setSelectedPatient(null);
       setSelectedPatientInfo(null);
@@ -74,6 +75,7 @@ const HeroSection = () => {
           (info) => info.patient_id === selectedPatient.id
         );
         setSelectedPatientInfo(patientInfo);
+        console.log("patientInfo", patientInfo);
       } else {
         console.log("Patient Information not available yet.");
       }
@@ -84,15 +86,16 @@ const HeroSection = () => {
     <Wrapper>
       <div className="container">
         {selectedPatient && (
-          <div key={selectedPatient.id} className="information">
-            <h2>{selectedPatient.name}</h2>
+          <div key={selectedPatient.P_id} className="information">
+            <h2>{selectedPatient.Name}</h2>
             <div className="squares">
-              <p>{selectedPatient.gender}</p>
-              <p>{selectedPatient.age}</p>
+              <p>{selectedPatient.Gender}</p>
+              <p>{selectedPatient.Age}</p>
             </div>
             {selectedPatientInfo && (
               <h4>
-                Next appointment scheduled on: {selectedPatientInfo?.date}
+                Next appointment scheduled on:
+                {selectedPatientInfo?.next_appointment}
               </h4>
             )}
           </div>
@@ -106,8 +109,8 @@ const HeroSection = () => {
               </option>
               <option value="all">Show All Patients</option>
               {regData.map((patient) => (
-                <option key={patient.id} value={JSON.stringify(patient)}>
-                  {patient.name}
+                <option key={patient.P_id} value={JSON.stringify(patient)}>
+                  {patient.Name}
                 </option>
               ))}
             </select>
@@ -135,14 +138,14 @@ const HeroSection = () => {
           <tbody>
             {selectedPatient === null
               ? regData.map((patient) => (
-                  <tr key={patient.id}>
+                  <tr key={patient.P_id}>
                     <td>
                       <input type="checkbox" />
                     </td>
-                    <td>{patient.id}</td>
-                    <td>{patient.name}</td>
+                    <td>{patient.P_id}</td>
+                    <td>{patient.Name}</td>
                     {selectedPatientInfo && (
-                      <td>{selectedPatientInfo.description}</td>
+                      <td>{selectedPatientInfo.Description}</td>
                     )}
                   </tr>
                 ))
@@ -151,9 +154,9 @@ const HeroSection = () => {
                     <td>
                       <input type="checkbox" />
                     </td>
-                    <td>{selectedPatient.id}</td>
-                    <td>{selectedPatient.name}</td>
-                    <td>{selectedPatientInfo?.description}</td>
+                    <td>{selectedPatient.P_id}</td>
+                    <td>{selectedPatient.Name}</td>
+                    <td>{selectedPatientInfo?.Description}</td>
                   </tr>
                 )}
           </tbody>
